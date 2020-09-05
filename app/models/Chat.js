@@ -30,21 +30,13 @@ let chatSchema = new Schema({
     type: String,
     default: ''
   },
-  chatRoom: {
-    type: String,
-    default: ''
-  },
   seen: {
     type: Boolean,
     default: false
   },
   createdOn: {
     type: Date,
-    default: Date.now
-  },
-  modifiedOn: {
-    type: Date,
-    default: Date.now
+    default: Date.now()
   }
 
 })

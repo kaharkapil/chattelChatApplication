@@ -9,6 +9,7 @@ const eventEmitter = new events.EventEmitter();
 const check = require("./checkLib.js");
 const response = require('./responseLib')
 const tokenLib =require('./tokenLib')
+const time=require('./timeLib');
 const ChatModel = mongoose.model('Chat');
 
 let setServer = (server) => {
@@ -30,6 +31,7 @@ let setServer = (server) => {
         socket.on('set-user',(authToken) => {
 
             console.log("set-user called")
+            console.log(authToken)
             tokenLib.dummy_VerifyClaim(authToken,(err,user)=>{
                 if(err){
                     socket.emit('auth-error', { status: 500, error: 'Please provide correct auth token' })
@@ -37,14 +39,14 @@ let setServer = (server) => {
                 else{
 
                     console.log("user is verified..setting details");
-                    let currentUser = user;
+                    
                     // setting socket user id 
-                    socket.userId = currentUser.userId
-                    let userName = currentUser.Name;
+                    socket.userId = user.userId
+                    let userName = user.Name;
                     console.log(`${userName} is online`);
 
 
-                    let userObj = {userId:currentUser.userId,Name:userName};
+                    let userObj = {userId:user.userId,Name:userName};
                     allUsers.push(userObj);
                     console.log(allUsers);
 
@@ -102,6 +104,12 @@ let setServer = (server) => {
             socket.to(socket.room).broadcast.emit('typing',fullName);
 
         });
+           
+        //mark chat as seen data userId& senderId
+        socket.on('mark-chat-as-seen',(data)=>{
+           eventEmitter.emit('update-seen',data);
+
+        })
 
 
 
@@ -127,10 +135,9 @@ eventEmitter.on('save-chat', (data) => {
         receiverId: data.receiverId || '',
         message: data.message,
         chatRoom: data.chatRoom || '',
-        createdOn: data.createdOn
+        createdOn:data.createdOn
 
     });
-
     newChat.save((err,result) => {
         if(err){
             console.log(`error occurred: ${err}`);
@@ -144,6 +151,38 @@ eventEmitter.on('save-chat', (data) => {
     });
 
 }); // end of saving chat.
+
+// mark seen=true
+eventEmitter.on('update-seen',(data)=>{
+ 
+      let findQuery={
+        $and: [{receiverId:data.userId},{senderId:data.senderId} ]
+      }
+      let updateQuery={
+        seen: true
+      }
+
+      ChatModel.update(findQuery,updateQuery,{multi:true})
+      .exec((err,result)=>{
+        if(err){
+          console.log(err);
+          let apiResponse=response.generate(true,`Error Occured ${err.message}`,500,null);
+          console.log(apiResponse);
+        }else if(check.isEmpty(result)){
+          let apiResponse=response.generate(true,'No chat Found',404,null);
+          console.log(apiResponse);
+        }else{
+           console.log('chat Found and updated');
+           let apiResponse=response.generate(false,'Updated',200,result);
+           console.log(apiResponse);
+        }
+      });
+
+
+    });
+
+
+
 
 module.exports = {
     setServer: setServer

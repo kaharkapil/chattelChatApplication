@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken')
 const shortid = require('shortid')
 const secretKey = 'someVeryRandomStringThatNobodyCanGuess';
 
+const check=require('./checkLib')
+
 //adding model queries for testing purpose
 const UserModel=mongoose.model('User')
 
@@ -82,10 +84,11 @@ let dummy_VerifyClaim = (token,cb) => {
       console.log("error while verify token");
       console.log(err);
       cb(err, null)
+    }else if(check.isEmpty(result)){
+      console.log("No User found")
+      cb('empty',null)
     }
     else {
-      console.log("user verified");
-      console.log(result)
       cb(null, result)
     }
 

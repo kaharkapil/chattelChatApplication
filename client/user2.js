@@ -42,6 +42,14 @@ let chatSocket = () => {
     
   });
 
+  //data to make particualr chat seen status true
+  let data={
+    userId:userId,
+    senderId:'socket20201'
+  }
+  socket.emit('mark-chat-as-seen',data);
+
+
   
   
   $("#messageToSend").on('keypress', function () {
@@ -54,6 +62,7 @@ let chatSocket = () => {
 
     let messageText = $("#messageToSend").val()
     chatMessage.message = messageText;
+    
     socket.emit("chat-msg",chatMessage)
 
   })

@@ -10,6 +10,11 @@ module.exports.setRouter = (app) => {
     res.send("Hello i am active")
   })
   app.get(`${baseUrl}/getChat`, chatController.getUsersChat);
+  app.get(`${baseUrl}/find/unseenChat`, chatController.findUnseenChat);
+  app.get(`${baseUrl}/getAllUsers`, chatController.getAllUsers);
+  app.get(`${baseUrl}/getUser/:authToken`, chatController.getUser);
+
+
 
   
 }
